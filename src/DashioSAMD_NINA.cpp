@@ -448,10 +448,14 @@ MessageData DashioBLE::messageData(BLE_CONN, INCOMING_BUFFER_SIZE);
 void DashioBLE::onReadValueUpdate(BLEDevice central, BLECharacteristic characteristic) {
     // central wrote new value to characteristic
     int dataLength = characteristic.valueLength();
-    char value[dataLength + 1];  // one byte more, to save the '\0' character!
+//???    char value[dataLength + 1];  // one byte more, to save the '\0' character!
+    char* value = new char[dataLength + 1];  // one byte more, to save the '\0' character!
     characteristic.readValue(value, dataLength);
     value[dataLength] = '\0';  // make sure to null-terminate!
+Serial.println(value);//???
     messageData.processMessage(value);
+    messageData.checkBuffer();
+    delete[] value;
 }
 
 void DashioBLE::setCallback(void (*processIncomingMessage)(MessageData *connection)) {
