@@ -153,8 +153,7 @@ private:
     DashioDevice *dashioDevice = nullptr;
     static MessageData messageData;
     BLEService bleService;
-    BLEStringCharacteristic bleReadCharacteristic;
-    BLEStringCharacteristic bleWriteCharacteristic;
+    BLEStringCharacteristic bleCharacteristic;
 
     static void onBLEConnected(BLEDevice central);
     static void onBLEDisconnected(BLEDevice central);
