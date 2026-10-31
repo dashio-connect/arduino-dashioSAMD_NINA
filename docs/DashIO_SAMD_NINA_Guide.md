@@ -1,8 +1,8 @@
 <h1 id="toc_0">Dash IoT Guide (Arduino SAMD NINA)</h1>
 
-**12 February 2025**
+**14 July 2026**
 
-This guide demonstrates how to make BLE, TCP and MQTT connections to an Arduino SAMD based IoT device using the Arduino or PlatformIO IDE and the **DashIO** Adruino library. It also shows how to load user controls (widgets) into your mobile device to monitor and control an IoT device.
+This guide demonstrates how to make BLE, TCP and MQTT connections to an Arduino SAMD based IoT device using the Arduino or PlatformIO IDE and the **DashIO** Arduino library. It also shows how to load user controls (widgets) into your mobile device to monitor and control an IoT device.
 
 The boards intended for in this guide are the **Arduino NANO 33 IoT** and **Arduino MKR 1010**, but it may work for other SAMD boards.
 
@@ -22,6 +22,8 @@ You will need to install the <strong>Dash</strong> app on your mobile phone or t
 
 If you'd like to connect to your IoT devices through the **Dash** MQTT broker, setup an account on the <a href="https://dashio.io">dashio.io</a> website.
 
+The board's NINA module needs **NINA firmware 3.0.0 or later**. From ArduinoBLE 2.0.0, BLE talks to the NINA module over SPI, which needs this firmware. To update it in the Arduino IDE, use **Tools → Firmware Updater**. With older firmware, BLE fails to start with "Please ensure your NINA firmware is version 3.0.0 or higher".
+
 <h2 id="toc_3">Install</h2>
 
 <h3 id="toc_4">Arduino IDE</h3>
@@ -29,9 +31,11 @@ If you'd like to connect to your IoT devices through the **Dash** MQTT broker, s
 You will need to add the **DashioSAMD_NINA** library into your project.  It is included in the Arduino IDE Library manager. Search the library manager for the library titled "DashioSAMD_NINA" and install. The Arduino IDE may also ask you to install the following libraries (dependencies). Please make sure they are all installed from the Arduino IDE Library Manager.
 
 - **Dashio** is the core messageing library used to manage messages.
-- **ArduinoBLE** required for BLE messaging.
+- **ArduinoBLE** (version 2.0.0 or later) required for BLE messaging.
 - **ArduinoMqttClient** required for MQTT messaging.
-- **WiFiNINA_Generic** by Khoi Hoang is required for WiFI and TCP connectivity.
+- **WiFiNINA** by Arduino (version 2.x) is required for WiFi connectivity. Use this library, not **WiFiNINA_Generic**: ArduinoBLE 2.x and WiFiNINA_Generic each include their own copy of the NINA SPI driver, and a sketch using both fails to link with "multiple definition of `SpiDrv::...`" errors.
+- **Arduino_SpiNINA** is the NINA SPI driver used by both ArduinoBLE and WiFiNINA. It is installed with them.
+- **MDNS_Generic** by Khoi Hoang is used for mDNS, so the **Dash** app can find the device over TCP.
 - **arduino-timer** by Michael Contreras is used for the WiFi and MQTT connection.
 - **FlashStorage** required storing WiFi and login credentials etc.
 
@@ -52,9 +56,10 @@ board = nano_33_iot
 framework = arduino
 lib_deps = 
 	contrem/arduino-timer@^2.3.1
-	arduino-libraries/WiFiNINA@^1.8.13
+	arduino-libraries/WiFiNINA@^2.1.1
 	arduino-libraries/ArduinoMqttClient@^0.1.6
-	arduino-libraries/ArduinoBLE@^1.3.2
+	arduino-libraries/ArduinoBLE@^2.1.0
+	khoih-prog/MDNS_Generic@^1.4.2
 	cmaglie/FlashStorage@^1.0.0
 lib_ldf_mode = deep
 monitor_speed = 115200
@@ -143,7 +148,7 @@ void loop() {
 
 <p>The next step is to show the Dial values from the messages on a control on the <strong>Dash</strong> app.</p>
 
-<p>In the <strong>Dash</strong> app, tap the <img src="https://dashio.io/wp-content/uploads/2021/07/iot_blue_44.png" width="20"> <strong>All Devices</strong> button, followed by the <img src="https://dashio.io/wp-content/uploads/2021/07/magnifying_glass_44_blue.png" width="20"> <strong>Find New Device</strong> button. Then select the <strong>BLE Scan</strong> option to show a list of new IoT devices that are BLE enabled. Your IoT device shpuld be shown in the list. Select your device and from the next menu select <strong>Create Device View</strong>. This will create an empty Device View for your new IoT deivce. You can now add controls to the Device View:</p>
+<p>In the <strong>Dash</strong> app, tap the <img src="https://dashio.io/wp-content/uploads/2026/07/iot_many_blue_44.png" width="20"> <strong>All Devices</strong> button, followed by the <img src="https://dashio.io/wp-content/uploads/2021/07/magnifying_glass_44_blue.png" width="20"> <strong>Find New Device</strong> button. Then select the <strong>BLE Scan</strong> option to show a list of new IoT devices that are BLE enabled. Your IoT device should be shown in the list. Select your device and from the next popup menu choose to <strong>Create Device View</strong>. This will create an empty Device View for your new IoT device. You can now add controls to the Device View:</p>
 
 <h3 id="toc_8">Adding Controls to Dash App</h3>
 
@@ -291,9 +296,9 @@ void loop() {
 
 This device is discoverable by the <strong>Dash</strong> app. You can also discover your IoT device using a third party Bonjour/Zeroconf discovery tool. The mDNS service will be "\_DashIO.\_tcp." and individual IoT devices on this service are identified by their mac address (<em>device_ID</em>).
 
-<p>Int the <code>loop()</code> function, <code>wifi.run();</code> is used to regularly check that the WiFi is connected and manage the attached connection. </p>
+<p>In the <code>loop()</code> function, <code>wifi.run();</code> is used to regularly check that the WiFi is connected and manage the attached connection. </p>
 
-<p>Message processing for a TCP connection is done exactly the samy way as for the BLE connection, by adding the <code>processIncomingMessage</code> callback into the TCP connection during <code>setup</code> function. Our finished code, with Dial and Knob added is:</p>
+<p>Message processing for a TCP connection is done exactly the same way as for the BLE connection, by adding the <code>processIncomingMessage</code> callback into the TCP connection during <code>setup</code> function. Our finished code, with Dial and Knob added is:</p>
 
 ```
 #include "DashioSAMD_NINA.h"
@@ -347,7 +352,7 @@ void loop() {
 }
 ```
 
-<p>Run the <strong>Dash</strong> app once more. Tap the <img src="https://dashio.io/wp-content/uploads/2021/07/iot_blue_44.png" width="20"> <strong>All Devices</strong> button, followed by the <img src="https://dashio.io/wp-content/uploads/2021/07/magnifying_glass_44_blue.png" width="20"> <strong>Find New Device</strong> button. Then select <strong>Manually Connect</strong> and create your TCP connection.</p>
+<p>Run the <strong>Dash</strong> app once more. Tap the <img src="https://dashio.io/wp-content/uploads/2026/07/iot_many_blue_44.png" width="20"> <strong>All Devices</strong> button, followed by the <img src="https://dashio.io/wp-content/uploads/2021/07/magnifying_glass_44_blue.png" width="20"> <strong>Find New Device</strong> button. Then select <strong>Manually Connect</strong> and create your TCP connection.</p>
 
 For the next step, you will need to setup your **Dash** app with Dial and Knob controls, as described in the section above **Adding Controls to Dash App**.
 
@@ -404,7 +409,7 @@ void loop() {
 
 <p>In the code above, make sure you replace <strong>yourWiFiSSID</strong> with your WiFi SSID, <strong>yourWiFiPassword</strong> with your WiFI password, <strong>yourMQTTuserName</strong> with you <strong>dash</strong> account username and <strong>yourMQTTpassword</strong> with your <strong>dash</strong> account password. Setup the Arduino IDE serial monitor with 115200 baud and run the code. You will see messages on the Arduino serial monitor, and after a few attempts, your IoT device should connect to your WiFi and then connect to the <strong>dash</strong> MQTT server.</p>
 
-<p>Message processing for a MQTT connection is done exactly the samy way as for the BLE connection, by adding the <code>processIncomingMessage</code> callback into the MQTT connection during <code>setup</code> function. Our finished code, with Dial and Knob added is:</p>
+<p>Message processing for a MQTT connection is done exactly the same way as for the BLE connection, by adding the <code>processIncomingMessage</code> callback into the MQTT connection during <code>setup</code> function. Our finished code, with Dial and Knob added is:</p>
 
 ```
 #include "DashioSAMD_NINA.h"
@@ -463,7 +468,7 @@ void loop() {
 }
 ```
 
-<p>Run the <strong>Dash</strong> app once more. Tap the <img src="https://dashio.io/wp-content/uploads/2021/07/iot_blue_44.png" width="20"> <strong>All Devices</strong> button, followed by the <img src="https://dashio.io/wp-content/uploads/2021/07/magnifying_glass_44_blue.png" width="20"> <strong>Find New Devices</strong> button. Then select the <strong>My Devices On Dash</strong> option to show a list of new IoT devices that have announced themselves to the <strong>dash</strong> server. Your device will be shown (named "Bob Name"). Select your IoT device to add the MQTT connection to your existing IoT device with the TCP connection.</p>
+<p>Run the <strong>Dash</strong> app once more. Tap the <img src="https://dashio.io/wp-content/uploads/2026/07/iot_many_blue_44.png" width="20"> <strong>All Devices</strong> button, followed by the <img src="https://dashio.io/wp-content/uploads/2021/07/magnifying_glass_44_blue.png" width="20"> <strong>Find New Devices</strong> button. Then select the <strong>My Devices On Dash</strong> option to show a list of new IoT devices that have announced themselves to the <strong>dash</strong> server. Your device will be shown (named "Bob Name"). Select your IoT device to add the MQTT connection to your existing IoT device with the TCP connection.</p>
 
 For the next step, you will need to setup your **Dash** app with Dial and Knob controls, as described in the section above **Adding Controls to Dash App**.
 
@@ -503,7 +508,7 @@ void sendMessage(ConnectionType connectionType, const String& message) {
 
 <ul>
 <li><strong>Design your layout</strong> in the <strong>Dash</strong> app and include all controls and connections that you need in your layout.</li>
-<li><strong>Export the layout</strong>: Tap on the <strong>Device</strong> button, then tap the <strong>Export Layout</strong> button.</li>
+<li><strong>Export the layout</strong>: Tap on the <strong>Device</strong> button, then tap the <strong>Developer / Export Layout</strong> button.</li>
 <li><strong>Select the provisioning setup</strong> that you want (see below for provisioning details) and tap the <strong>Export</strong> button. The Layout Configuration will be emailed to you.</li>
 <li><strong>Copy and paste</strong> the C64 configuration text from the email into your Arduino code, assigning it to a pointer to store the text in program memory. Your C64 configuration text will be different to that shown below.</li>
 <li><strong>Add the Layout Config Revision</strong> integer (CONFIG_REV) as a third attribute to the DashDevice object.</li>
@@ -703,7 +708,7 @@ void onProvisionCallback(ConnectionType connectionType, const String& message, b
 
 <p>The callback has two purposes. Firstly we send a message back to the Dash app to let it know the provisioning is complete. And secondly, if the WiFi or MQTT connection credentials have changed, we need to restart the WiFi or MQTT connection or reboot the processor for a fresh start.</p>
 
-<p>To provision your device, run the <strong>Dash</strong> app and tap the <img src="https://dashio.io/wp-content/uploads/2021/07/iot_blue_44.png" width="20"> <strong>All Devices</strong> button and select your device. Tap the <img src="https://dashio.io/wp-content/uploads/2022/09/key_44_blue.png" width="20"> <strong>Provisioning</strong> button and follow the instructions.</p>
+<p>To provision your device, run the <strong>Dash</strong> app and tap the <img src="https://dashio.io/wp-content/uploads/2026/07/iot_many_blue_44.png" width="20"> <strong>All Devices</strong> button and select your device. Tap the <img src="https://dashio.io/wp-content/uploads/2022/09/key_44_blue.png" width="20"> <strong>Provisioning</strong> button and follow the instructions.</p>
 
 The final provisioning feature is the ability to "Reset" your IoT device. The **Dash** app provisioning menu also includes a "Reset Device" button. In your IoT device, you will receive an incoming message of ControlType = ***resetDevice*** which you can manage in your ```processIncomingMessage``` callback as shown in the following example:
 

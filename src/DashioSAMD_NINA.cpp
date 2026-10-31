@@ -40,10 +40,6 @@ const int     MQTT_RETRY_S = 10; // Retry after 10 seconds
 // BLE
 const int BLE_MAX_SEND_MESSAGE_LENGTH = 100;
 
-// mDNS
-WiFiUDP udp;
-MDNS mdns(udp);
-
 // ---------------------------------------- WiFi ---------------------------------------
 
 bool DashioWiFi::oneSecond = false;

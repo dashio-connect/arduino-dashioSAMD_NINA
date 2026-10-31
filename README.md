@@ -18,6 +18,11 @@ For the big picture on **DashIO**, take a look at our website: <a href="https://
 
 For all documentation and software guides: <a href="https://dashio.io/documents">dashio.io/documents</a>
 
+## Requirements
+
+- **ArduinoBLE** 2.0.0 or later, and **WiFiNINA** 2.x (Arduino's official library, not WiFiNINA_Generic). Both use the **Arduino\_SpiNINA** driver, which the Arduino IDE installs with them.
+- **NINA firmware 3.0.0 or later** on the board (Nano 33 IoT, MKR WiFi 1010). From ArduinoBLE 2.0.0, BLE talks to the NINA module over SPI, which needs this firmware. To update it in the Arduino IDE, use **Tools → Firmware Updater**. With older firmware, BLE fails to start with "Please ensure your NINA firmware is version 3.0.0 or higher".
+
 ## Dash IoT Application
 
 The **Dash** app is free and available for both Apple and Android devices. Use it to create beautiful and powerful user interfaces to you IoT devices.
@@ -30,6 +35,14 @@ The **Dash** app is free and available for both Apple and Android devices. Use i
 ## Release Notes
 
 For previous releases, please refer to <a href="https://github.com/dashio-connect/arduino-dashio">github.com/dashio-connect/arduino-dashio</a>, which is now obsolete.
+
+### 1.3.0 (30 October 2026)
+
+- Use the official **WiFiNINA** library instead of **WiFiNINA_Generic**. ArduinoBLE 2.x and WiFiNINA_Generic each include their own copy of the NINA SPI driver, so a sketch using both failed to link with "multiple definition of `SpiDrv::...`" errors.
+- Requires ArduinoBLE 2.0.0 or later, and NINA firmware 3.0.0 or later (see Requirements).
+- Added **MDNS_Generic** to the library dependencies (it was used but not listed).
+- Removed an unused global mDNS object, saving some RAM.
+- BLE writes longer than 20 bytes from the phone work with ArduinoBLE 1.4.1 or later. In the Android **Dash** app, the **BLE 20 Byte Writes (Arduino SAMD)** setting can be turned off for faster messaging.
 
 ### 1.2.3 (23 January 2025)
 

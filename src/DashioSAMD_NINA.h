@@ -39,13 +39,12 @@
 #include <arduino-timer.h>
 
 #include "Dashio.h"
-//#include <WiFiNINA.h>
-#include <WiFiNINA_Generic.h> // For mDNS
+// The official WiFiNINA, not WiFiNINA_Generic: ArduinoBLE 2.x uses Arduino_SpiNINA's SPI driver (SpiDrv) on NINA boards,
+// and WiFiNINA_Generic has its own copy of it, so the two can't be linked together. WiFiNINA 2.x uses Arduino_SpiNINA too.
+#include <WiFiNINA.h> // Includes WiFiUdp.h
 #include <ArduinoMqttClient.h>
 
-#include <MDNS_Generic.hpp>
-#define WIFI_NETWORK_WIFININA   true
-#include <WiFiUdp_Generic.h> // mDNS for TCP
+#include <MDNS_Generic.hpp> // mDNS for TCP. Only needs the core UDP class, which WiFiNINA's WiFiUDP implements
 
 #if defined ARDUINO_SAMD_NANO_33_IOT || defined ARDUINO_SAMD_MKRWIFI1010
 
