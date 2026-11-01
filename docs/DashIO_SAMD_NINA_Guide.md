@@ -480,7 +480,41 @@ For the next step, you will need to setup your **Dash** app with Dial and Knob c
 
 <h3 id="toc_11">Combining BLE, TCP and MQTT</h3>
 
-<p>The <strong>Arduino NANO 33 IoT</strong> and <strong>Arduino MKR 1010</strong> are not capable of operating with bith BLE and WiFi operating at the same time. However, it is easy to switch between BLE and TCP or MQTT.</p>
+<p>With <strong>NINA firmware 3.0.0 or later</strong> and <strong>ArduinoBLE</strong> 2.x, the <strong>Arduino NANO 33 IoT</strong> and <strong>Arduino MKR 1010</strong> can run BLE and WiFi at the same time:</p>
+
+<ul>
+<li><strong>BLE with TCP</strong> works well.</li>
+<li><strong>BLE with the dash MQTT connection</strong> works, but runs very slowly. The <strong>dash</strong> MQTT connection is encrypted, and the NINA module does the encryption itself. Because of the NINA module's limitations, encryption becomes very slow while BLE is also running: connecting to the <strong>dash</strong> server can take around 30 seconds, and each message can take 10 seconds or more to send. If you need a responsive MQTT connection, switch between BLE and MQTT instead of running them together, as the example in the library does.</li>
+</ul>
+
+<p>When running BLE and WiFi together, start the WiFi first. <code>wifi.begin()</code> restarts the NINA module, which stops BLE, so BLE must be started after it. If the WiFi disconnects and has to be started again, restart BLE afterwards:</p>
+
+```
+bool bleStarted = false;
+
+void startWiFiThenBLE() {
+    if (bleStarted) {
+        ble_con.end();
+    }
+    wifi.begin(WIFI_SSID, WIFI_PASSWORD);
+    ble_con.begin();
+    bleStarted = true;
+}
+
+void setup() {
+    // ... set up the device and connections, then:
+    startWiFiThenBLE();
+}
+
+void loop() {
+    ble_con.run();
+    if (!wifi.run()) { // WiFi has disconnected
+        startWiFiThenBLE();
+    }
+}
+```
+
+<p>Use <code>wifi.macAddress()</code> for the device ID, as in <code>dashDevice.setup(wifi.macAddress(), "Bob Name");</code>, even for the BLE connection. The NINA module gives Bluetooth a different address from WiFi, so using the BLE address for one connection and the WiFi address for another would make the <strong>Dash</strong> app see two different devices.</p>
 
 When combining connections, it is useful to create a generic ```sendMessage``` function to reply to an incoming message for a specific connection type. This prevents sending unnecessary reply messages to all connections:
 

@@ -40,6 +40,7 @@ For previous releases, please refer to <a href="https://github.com/dashio-connec
 
 - Use the official **WiFiNINA** library instead of **WiFiNINA_Generic**. ArduinoBLE 2.x and WiFiNINA_Generic each include their own copy of the NINA SPI driver, so a sketch using both failed to link with "multiple definition of `SpiDrv::...`" errors.
 - Requires ArduinoBLE 2.0.0 or later, and NINA firmware 3.0.0 or later (see Requirements).
+- With NINA firmware 3.0.0 or later, BLE and WiFi can run at the same time. BLE with TCP works well. BLE with the dash MQTT connection works but runs very slowly, because of the NINA module's limitations when it encrypts while BLE is running. See the software guide.
 - Added **MDNS_Generic** to the library dependencies (it was used but not listed).
 - Removed an unused global mDNS object, saving some RAM.
 - BLE writes longer than 20 bytes from the phone work with ArduinoBLE 1.4.1 or later. In the Android **Dash** app, the **BLE 20 Byte Writes (Arduino SAMD)** setting can be turned off for faster messaging.
